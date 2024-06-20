@@ -37,7 +37,7 @@ $kid_array = fetch_kid($data);
 $serialized_array = serialize($kid_array);
 
 // Write the serialized array to a file
-$file_path = 'kid_data.txt';
+$file_path = __DIR__ . '/kid_data.txt';
 file_put_contents($file_path, $serialized_array);
 
 echo "Data has been successfully stored in $file_path";
