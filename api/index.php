@@ -1,56 +1,61 @@
 <?php
 $user_ip = $_SERVER['REMOTE_ADDR'];
 $id = $_GET['id'];
+
 function get_data($id, $kid_data) {
     foreach ($kid_data as $item) {
         if ($item['id'] === $id) {
-            return array('url' => $item['cmd'],'kid' => $item['defaultkid'], 'pssh' => $item['pssh']);
+            return array('url' => $item['cmd'], 'kid' => $item['defaultkid'], 'pssh' => $item['pssh']);
         }
     }
-    // If 'id' is not found, return null
     return null;
 }
 
-// File path where the serialized array is stored
+// Ensure paths are relative to the current directory
 $file_path = __DIR__ . '/kid_data.txt';
+$filename = __DIR__ . '/tplay-catchup-Mpd.json';
 
 // Read the serialized array from the file and unserialize it
 $serialized_data = file_get_contents($file_path);
+if ($serialized_data === false) {
+    die("Error reading kid_data.txt");
+}
 $kid_data = unserialize($serialized_data);
 
 // Call the function to get 'kid' and 'pssh' corresponding to the provided 'id'
 $result = get_data($id, $kid_data);
+if ($result === null) {
+    die("Invalid ID");
+}
 
 $default_kid = $result['kid'];
-//$add_pssh = $result['pssh'];
-
-$filename = __DIR__ . '/tplay-catchup-Mpd.json';
 
 $file = file_get_contents($filename);
+if ($file === false) {
+    die("Error reading tplay-catchup-Mpd.json");
+}
 
 $data = json_decode($file, true);
+if ($data === null) {
+    die("Error decoding JSON");
+}
+
+if (!isset($data[$id])) {
+    die("ID not found in JSON data");
+}
 
 $url = $data[$id];
-
-// Create a DateTime object with the current time in New York
-//$currentDateTime = new DateTime("now", new DateTimeZone("America/New_York"));
-
-// Format the DateTime object to the desired format: YYYYMMDDTHHMMSS
-//$currentDateTime->modify('+3 days');
-//$currentNewYorkTimeFormatted = $currentDateTime->format('Ymd\THis');
-
-//$currentDateTime->modify('-10 days');
-//$past7dayNewYorkTimeFormatted = $currentDateTime->format('Ymd\THis');
-
-//$hmac = 'begin=' . $past7dayNewYorkTimeFormatted .'&end=' . $currentNewYorkTimeFormatted;
 $baseUrl = str_replace("/manifest.mpd", "/dash/", $url);
 $url = str_replace("/manifest.mpd", "/dash/tsdevil.mpd", $url);
 
-// Append query parameters to the URL
-//$url .= '?' .$hmac;
-// Parse the URL\
-//echo $url;
+// Debugging output
+error_log("URL: $url");
+
+// Parse the URL
 $parsedUrl = parse_url($url);
+if ($parsedUrl === false) {
+    die("Malformed URL");
+}
 
 // Get the host
 $host = $parsedUrl['host'];
@@ -60,6 +65,7 @@ $h1 = [
     "X-Forwarded-For: $user_ip",
     "Host: $host"
 ];
+
 // Set Curl options
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_URL, $url); // Set the URL to download
@@ -81,11 +87,8 @@ if(curl_errno($ch)){
 curl_close($ch);
 
 $new_content = "<ContentProtection value=\"cenc\" schemeIdUri=\"urn:mpeg:dash:mp4protection:2011\" cenc:default_KID=\"$default_kid\"/>";
-
 $response = str_replace('<ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011"/>', $new_content, $response);
-
 $response = str_replace('<BaseURL>dash/</BaseURL>', '<BaseURL>'. $baseUrl . '</BaseURL>', $response);
-
 
 // Output the response (MPD content) as a file download
 header('Content-Type: application/dash+xml');
