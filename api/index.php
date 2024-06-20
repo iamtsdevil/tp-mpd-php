@@ -62,7 +62,7 @@ $host = $parsedUrl['host'];
 
 // Initialize Curl session
 $h1 = [
-    "X-Forwarded-For: $user_ip",
+    "X-Forwarded-For: 103.86.177.136",
     "Host: $host"
 ];
 
