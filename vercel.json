@@ -4,12 +4,16 @@
     {
       "src": "api/index.php",
       "use": "vercel-php"
+    },
+    {
+      "src": "api/router.php",
+      "use": "vercel-php"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.php"
+      "dest": "/api/router.php"
     }
   ]
 }
