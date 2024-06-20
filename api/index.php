@@ -12,7 +12,7 @@ function get_data($id, $kid_data) {
 }
 
 // File path where the serialized array is stored
-$file_path = 'kid_data.txt';
+$file_path = __DIR__ . '/kid_data.txt';
 
 // Read the serialized array from the file and unserialize it
 $serialized_data = file_get_contents($file_path);
@@ -24,7 +24,7 @@ $result = get_data($id, $kid_data);
 $default_kid = $result['kid'];
 //$add_pssh = $result['pssh'];
 
-$filename = 'tplay-catchup-Mpd.json';
+$filename = __DIR__ . '/tplay-catchup-Mpd.json';
 
 $file = file_get_contents($filename);
 
